@@ -6,6 +6,7 @@ from app_package._common.utilities import custom_logger
 import datetime
 from flask_login import login_required, login_user, logout_user, current_user
 from app_package.bp_main.utils import send_image_to_google_for_analysis
+import json
 
 
 logger_bp_main = custom_logger('bp_main.log')
@@ -88,12 +89,38 @@ def save_photo():
     return jsonify({"error": "No image provided!"}), 400
 
 
+
+@bp_main.route("/view_user_photos/<username>", methods=["GET","POST"])
+@login_required
+def view_user_photos(username):
+    logger_bp_main.info(f"-- in view_user_photos route --")
+
+    path_to_user_image_analysis_files = os.path.join(current_app.config.get('DIR_USER_IMAGES'), current_user.username,"responses_small")
+    user_responses_file_list = os.listdir(path_to_user_image_analysis_files)
+    analysis_dict_list = []
+    for file in user_responses_file_list:
+        print("file")
+        # Opening JSON file
+        with open(os.path.join(path_to_user_image_analysis_files, file)) as json_file:
+            data = json.load(json_file)
+            analysis_dict_list.append(data)
+
+    return render_template('main/view_user_photos.html', analysis_dict_list=analysis_dict_list)
+
 # Website Assets static data
 @bp_main.route('/website_assets_favicon/<filename>')
 def website_assets_favicon(filename):
     logger_bp_main.info("-- in website_assets_favicon -")
     file_to_server = os.path.join(current_app.config.get('DIR_ASSETS_FAVICONS'), filename)
     logger_bp_main.info(f"file_to_server: {file_to_server}")
-    # print(f"Path to image file: {current_app.config.get('DIR_WEBSITE_UTILITY_IMAGES')}")
-    # print(f"image filename: {filename}")
     return send_from_directory(current_app.config.get('DIR_ASSETS_FAVICONS'), filename)
+
+# Website Assets static data
+@bp_main.route('/static_user_photo/<filename>')
+def static_user_photo(filename):
+    logger_bp_main.info("-- in static_user_photo -")
+    path_for_file_to_serve = os.path.join(current_app.config.get('DIR_USER_IMAGES'), current_user.username,"images")
+    file_to_server = os.path.join(path_for_file_to_serve, filename)
+    logger_bp_main.info(f"file_to_server: {file_to_server}")
+    return send_from_directory(path_for_file_to_serve, filename)
+

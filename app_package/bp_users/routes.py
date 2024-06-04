@@ -102,6 +102,7 @@ def register():
         hash_pw = bcrypt.hashpw(formDict.get('password').encode(), salt)
         new_user = Users(email = new_email, password = hash_pw)
         db_session.add(new_user)
+        db_session.flush()
         # sess.commit()
         # wrap_up_session(db_session, logger_bp_users)
         # Send email confirming succesfull registration
@@ -112,7 +113,13 @@ def register():
             flash(f'Problem with email: {new_email}', 'warning')
             return redirect(url_for('bp_users.login'))
 
-        user_dir = os.path.join(current_app.config.get('DIR_USER_IMAGES'), current_user.username)
+        logger_bp_users.info(f"***************")
+        logger_bp_users.info(f"***************")
+        logger_bp_users.info(f"***************")
+        logger_bp_users.info(f"path : {current_app.config.get('DIR_USER_IMAGES')}")
+        logger_bp_users.info(f"new_user.username : {new_user.username}")
+
+        user_dir = os.path.join(current_app.config.get('DIR_USER_IMAGES'), new_user.username)
         os.makedirs(user_dir, exist_ok=True)
 
         #log user in
